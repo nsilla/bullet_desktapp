@@ -10,15 +10,23 @@ from tinydb import TinyDB, Query
 
 default_journal_path='bullet_desktapp.json'
 
-def get_bullet(entry):
+def get_begining_of_month():
+    return get_today()[:-2] + '01'
+
+def get_bullet(entry, future=False):
     if entry['kind'] == 'event':
         return 'o'
     elif entry['kind'] == 'note':
         return '-'
     elif entry['state'] == 'done':
         return 'x'
+    elif future and entry['date'] != '':
+        return '>'
     else:
         return '·'
+
+def get_end_of_month():
+    return get_today()[:-2] + '31'
 
 def get_position(key):
     all_entries = journal.search(entries.key.exists())
@@ -72,6 +80,9 @@ def reposition(command):
         print('Repositioning command must include a position symbol, either: <, >')
         sys.exit(1)
 
+def test_future(date):
+    return date == '' or (str(date) >= str(get_begining_of_month()) and str(date) <= str(get_end_of_month()))
+
 
 parser = argparse.ArgumentParser(description='Manage a minimal digital bullet journal')
 parser.add_argument(
@@ -116,6 +127,12 @@ parser.add_argument(
     nargs=1,
     help='move a task either before or after another')
 parser.add_argument(
+    '-s',
+    metavar='Key [Date]',
+    dest='schedule',
+    nargs='+',
+    help='With one argument, send entry to future log. With two arguments set date for an entry.')
+parser.add_argument(
     '-l',
     action='store_true',
     help="list today's log")
@@ -142,7 +159,9 @@ journal = TinyDB(args.path[0] if args.path else default_journal_path)
 
 entries = Query()
 
-if args.reposition:
+if args.schedule:
+    journal.update({'date': args.schedule[1] if len(args.schedule) > 1 else ''}, entries.key == args.schedule[0])
+elif args.reposition:
     reposition(args.reposition[0])
 elif args.done:
     for key in args.done:
@@ -165,7 +184,7 @@ elif args.event:
         journal.insert(
             new_entry(description=' '.join(args.event),
                 kind='event',
-                date=args.date))
+                date=args.date[0]))
 elif args.note:
     journal.insert(
         new_entry(description=' '.join(args.note),
@@ -178,6 +197,8 @@ elif args.l:
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.f:
     print('Future log:')
-    for entry in sorted(journal.search(entries.date == ''), key=lambda k: k['position']):
+# FIXME: search all events without date and scheduled within the current month.
+    for entry in sorted(journal.search(entries.date.test(test_future)), key=lambda k: k['position']):
+    #for entry in sorted(journal.search(entries.date == ''), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
-        print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
+        print(' %s %s%s' % (get_bullet(entry, future=True), entry['description'], with_key))
