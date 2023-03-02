@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 
 import argparse
-import datetime
 import random
 import string
 import sys
 
+import dates
+
 from tinydb import TinyDB, Query
 
 default_journal_path='bullet_desktapp.json'
-
-def get_begining_of_month():
-    return get_today()[:-2] + '01'
 
 def get_bullet(entry, future=False):
     if entry['kind'] == 'event':
@@ -25,9 +23,6 @@ def get_bullet(entry, future=False):
     else:
         return '·'
 
-def get_end_of_month():
-    return get_today()[:-2] + '31'
-
 def get_position(key):
     all_entries = journal.search(entries.key.exists())
     by_position = sorted(all_entries, key=lambda k: k['position'])
@@ -38,9 +33,6 @@ def get_position(key):
 
 
     return None, None, None
-
-def get_today():
-    return str(datetime.date.today())
 
 def new_key(size=6, chars=string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -79,9 +71,6 @@ def reposition(command):
     else:
         print('Repositioning command must include a position symbol, either: <, >')
         sys.exit(1)
-
-def test_future(date):
-    return date == '' or (str(date) >= str(get_begining_of_month()) and str(date) <= str(get_end_of_month()))
 
 
 parser = argparse.ArgumentParser(description='Manage a minimal digital bullet journal')
@@ -169,9 +158,9 @@ elif args.done:
 
         entry = journal.search(entries.key == key)
         if entry[0]['date'] == '':
-            journal.update({'date': get_today()}, entries.key == key)
+            journal.update({'date': dates.get_today()}, entries.key == key)
 elif args.task:
-    date = '' if args.f else (args.date if args.date else get_today())
+    date = '' if args.f else (args.date if args.date else dates.get_today())
     journal.insert(
         new_entry(description=' '.join(args.task),
             kind='task',
@@ -189,16 +178,14 @@ elif args.note:
     journal.insert(
         new_entry(description=' '.join(args.note),
             kind='note',
-            date=(args.date if args.date else get_today())))
+            date=(args.date if args.date else dates.get_today())))
 elif args.l:
-    print(get_today() + ':')
-    for entry in sorted(journal.search(entries.date == get_today()), key=lambda k: k['position']):
+    print(dates.get_today() + ':')
+    for entry in sorted(journal.search(entries.date == dates.get_today()), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.f:
     print('Future log:')
-# FIXME: search all events without date and scheduled within the current month.
-    for entry in sorted(journal.search(entries.date.test(test_future)), key=lambda k: k['position']):
-    #for entry in sorted(journal.search(entries.date == ''), key=lambda k: k['position']):
+    for entry in sorted(journal.search(entries.date.test(dates.test_future)), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry, future=True), entry['description'], with_key))
