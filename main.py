@@ -5,6 +5,7 @@ import random
 import string
 import sys
 
+import bullet
 import dates
 
 from tinydb import TinyDB, Query
@@ -184,8 +185,14 @@ elif args.l:
     for entry in sorted(journal.search(entries.date == dates.get_today()), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
+elif args.m:
+    print(dates.this_month() + ':')
+    for entry in bullet.monthly_log(journal):
+        with_key = ' [%s]' % entry['key'] if args.k else ''
+        print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.f:
     print('Future log:')
-    for entry in sorted(journal.search(entries.date.test(dates.test_future)), key=lambda k: k['position']):
+    #for entry in sorted(bullet.future_log(journal), key=lambda k: k['position']):
+    for entry in bullet.future_log(journal) + bullet.monthly_log(journal):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry, future=True), entry['description'], with_key))

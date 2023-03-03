@@ -11,3 +11,6 @@ def get_today():
 
 def test_future(date):
     return date == '' or (str(date) >= str(get_begining_of_month()) and str(date) <= str(get_end_of_month()))
+
+def this_month():
+    return get_today()[:-3]
