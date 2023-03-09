@@ -14,3 +14,11 @@ def test_future(date):
 
 def this_month():
     return get_today()[:-3]
+
+def this_week():
+    iso = datetime.date.today().isocalendar()
+    return iso[0:2]
+
+def week(date):
+    iso = datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()
+    return iso[0:2]

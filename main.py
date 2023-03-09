@@ -185,6 +185,11 @@ elif args.l:
     for entry in sorted(journal.search(entries.date == dates.get_today()), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
+elif args.w:
+    print("Week %d (%d): " % (dates.this_week()[1], dates.this_week()[0]))
+    for entry in bullet.weekly_log(journal):
+        with_key = ' [%s]' % entry['key'] if args.k else ''
+        print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.m:
     print(dates.this_month() + ':')
     for entry in bullet.monthly_log(journal):
