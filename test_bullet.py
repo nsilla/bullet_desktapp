@@ -19,33 +19,63 @@ def test_future_log():
     journal_yaml = '''
 _default:
   1:
+    description: previous month event
+    date: "{last_month}"
+    position: 1
+    kind: event
+  2:
+    description: previous month note
+    date: "{last_month}"
+    position: 1
+    kind: note
+  3:
     description: previous month task
     date: "{last_month}"
     position: 1
-  2:
+    kind: task
+    state: done
+  4:
+    description: previous month incomplete task
+    date: "{last_month}"
+    position: 1
+    kind: task
+    state: pending
+  5:
     description: task unscheduled
     date: ""
     position: 2
-  3:
+    kind: task
+    state: pending
+  6:
     description: next month task
     date: "{next_month}"
     position: 3
-  4:
+    kind: task
+    state: pending
+  7:
     description: today's task
     date: "{today}"
     position: 4 
-  5:
+    kind: task
+    state: pending
+  8:
     description: last week task
     date: "{last_week}"
     position: 5 
-  6:
+    kind: task
+    state: pending
+  9:
     description: next week task
     date: "{next_week}"
     position: 6 
-  7:
+    kind: task
+    state: pending
+  10:
     description: this week task
     date: "{this_monday}"
     position: 7     
+    kind: task
+    state: pending
 '''
     print(journal_yaml)
     journal_json = yaml.safe_load(journal_yaml.format(today=dates.get_today(), last_month=last_month, next_month=next_month, last_week=last_week, next_week=next_week, this_monday=this_monday))
@@ -88,7 +118,7 @@ def test_overdue():
 
     today_epoch = datetime.datetime.today().timestamp()
     
-    assert bullet.overdue(journal)[0]['description'] == 'previous month task'
+    assert bullet.overdue(journal)[0]['description'] == 'previous month incomplete task'
     assert bullet.overdue(journal, str(datetime.datetime.fromtimestamp(today_epoch-6*24*60*60)))[-1]["description"] == "last week task"
 
 def test_weekly_log():

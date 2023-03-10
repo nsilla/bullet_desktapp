@@ -18,7 +18,14 @@ def monthly_log(journal):
     return monthly_log
 
 def overdue(journal, reference=None):
-    return sorted(journal.search(entries.date.test(lambda d: len(d) and d < (reference if reference else dates.get_today()))), key=lambda k: k['position'])
+    def check_overdue(date):
+        return len(date) and date < (reference if reference else dates.get_today())
+    overdue = journal.search(
+        (entries.date != '') &
+        (entries.date < (reference if reference else dates.get_today())) &
+        (entries.kind == "task") &
+        (entries.state == "pending"))
+    return sorted(overdue, key=lambda k: k['position'])
 
 def weekly_log(journal):
     weekly_log = []
