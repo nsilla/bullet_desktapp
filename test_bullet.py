@@ -9,16 +9,18 @@ import dates
 
 def test_future_log():
 
-    tw = dates.this_week()
+    tw = datetime.datetime.today().isocalendar()[0:2]
     this_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]), '%G %V %u').date())
+    last_month = str(datetime.datetime.fromtimestamp(datetime.datetime.today().timestamp()-31*24*60*60).date())
+    next_month = str(datetime.datetime.fromtimestamp(datetime.datetime.today().timestamp()+31*24*60*60).date())
     last_week = str(datetime.datetime.fromtimestamp(datetime.datetime.today().timestamp()-7*24*60*60).date())
-    next_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]+1), '%G %V %u').date())
+    next_week = str(datetime.datetime.fromtimestamp(datetime.datetime.today().timestamp()+7*24*60*60).date())
 
     journal_yaml = '''
 _default:
   1:
     description: previous month task
-    date: "2023-02-03"
+    date: "{last_month}"
     position: 1
   2:
     description: task unscheduled
@@ -26,7 +28,7 @@ _default:
     position: 2
   3:
     description: next month task
-    date: "2023-04-03"
+    date: "{next_month}"
     position: 3
   4:
     description: today's task
@@ -38,7 +40,7 @@ _default:
     position: 5 
   6:
     description: next week task
-    date: "{next_monday}"
+    date: "{next_week}"
     position: 6 
   7:
     description: this week task
@@ -46,7 +48,7 @@ _default:
     position: 7     
 '''
     print(journal_yaml)
-    journal_json = yaml.safe_load(journal_yaml.format(today=dates.get_today(), last_week=last_week, next_monday=next_monday, this_monday=this_monday))
+    journal_json = yaml.safe_load(journal_yaml.format(today=dates.get_today(), last_month=last_month, next_month=next_month, last_week=last_week, next_week=next_week, this_monday=this_monday))
     with open('/tmp/test.json', 'w') as json_file:
         json.dump(journal_json, json_file)
 
