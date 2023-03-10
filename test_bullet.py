@@ -1,4 +1,6 @@
 import datetime
+import json
+import yaml
 
 from tinydb import TinyDB, Query
 
@@ -7,22 +9,58 @@ import dates
 
 def test_future_log():
 
+    tw = dates.this_week()
+    this_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]), '%G %V %u').date())
+    last_week = str(datetime.datetime.fromtimestamp(datetime.datetime.today().timestamp()-7*24*60*60).date())
+    next_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]+1), '%G %V %u').date())
+
+    journal_yaml = '''
+_default:
+  1:
+    description: previous month task
+    date: "2023-02-03"
+    position: 1
+  2:
+    description: task unscheduled
+    date: ""
+    position: 2
+  3:
+    description: next month task
+    date: "2023-04-03"
+    position: 3
+  4:
+    description: today's task
+    date: "{today}"
+    position: 4 
+  5:
+    description: last week task
+    date: "{last_week}"
+    position: 5 
+  6:
+    description: next week task
+    date: "{next_monday}"
+    position: 6 
+  7:
+    description: this week task
+    date: "{this_monday}"
+    position: 7     
+'''
+    print(journal_yaml)
+    journal_json = yaml.safe_load(journal_yaml.format(today=dates.get_today(), last_week=last_week, next_monday=next_monday, this_monday=this_monday))
+    with open('/tmp/test.json', 'w') as json_file:
+        json.dump(journal_json, json_file)
+
     journal = TinyDB("/tmp/test.json")
     entries = Query()
 
-    tw = dates.this_week()
-    this_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]), '%G %V %u').date())
-    last_sunday = str(datetime.datetime.strptime('%s %s 7' % (tw[0], tw[1]-1), '%G %V %u').date())
-    next_monday = str(datetime.datetime.strptime('%s %s 1' % (tw[0], tw[1]+1), '%G %V %u').date())
-
-    journal.remove(entries.description.matches(".*"))
-    journal.insert({'description': "previous month task", 'date': "2023-02-03", 'position': "1"})
-    journal.insert({'description': "task unscheduled", 'date': "", 'position': "2"})
-    journal.insert({'description': "next month task", 'date': "2023-04-03", 'position': "3"})
-    journal.insert({'description': "today's task", 'date': dates.get_today(), 'position': "4"})
-    journal.insert({'description': "last week task", 'date': last_sunday, 'position': "5"})
-    journal.insert({'description': "next week task", 'date': next_monday, 'position': "6"})
-    journal.insert({'description': "this week task", 'date': this_monday, 'position': "7"})
+    #journal.remove(entries.description.matches(".*"))
+    #journal.insert({'description': "previous month task", 'date': "2023-02-03", 'position': "1"})
+    #journal.insert({'description': "task unscheduled", 'date': "", 'position': "2"})
+    #journal.insert({'description': "next month task", 'date': "2023-04-03", 'position': "3"})
+    #journal.insert({'description': "today's task", 'date': dates.get_today(), 'position': "4"})
+    #journal.insert({'description': "last week task", 'date': last_week, 'position': "5"})
+    #journal.insert({'description': "next week task", 'date': next_monday, 'position': "6"})
+    #journal.insert({'description': "this week task", 'date': this_monday, 'position': "7"})
 
     future_log = bullet.future_log(journal)
 
@@ -41,6 +79,15 @@ def test_monthly_log():
     
     assert len(monthly_log) >= 1
     assert monthly_log[0]['description'] == "today's task"
+
+def test_overdue():
+
+    journal = TinyDB("/tmp/test.json")
+
+    today_epoch = datetime.datetime.today().timestamp()
+    
+    assert bullet.overdue(journal)[0]['description'] == 'previous month task'
+    assert bullet.overdue(journal, str(datetime.datetime.fromtimestamp(today_epoch-6*24*60*60)))[-1]["description"] == "last week task"
 
 def test_weekly_log():
 

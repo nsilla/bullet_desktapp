@@ -161,7 +161,7 @@ elif args.done:
         if entry[0]['date'] == '':
             journal.update({'date': dates.get_today()}, entries.key == key)
 elif args.task:
-    date = '' if args.f else (args.date if args.date else dates.get_today())
+    date = '' if args.f else (args.date[0] if args.date else dates.get_today())
     journal.insert(
         new_entry(description=' '.join(args.task),
             kind='task',
@@ -181,6 +181,12 @@ elif args.note:
             kind='note',
             date=(args.date if args.date else dates.get_today())))
 elif args.l:
+    overdue = bullet.overdue(journal)
+    if len(overdue) > 0:
+        print("Overdue:")
+        for entry in overdue:
+            with_key = ' [%s]' % entry['key'] if args.k else ''
+            print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
     print(dates.get_today() + ':')
     for entry in sorted(journal.search(entries.date == dates.get_today()), key=lambda k: k['position']):
         with_key = ' [%s]' % entry['key'] if args.k else ''
