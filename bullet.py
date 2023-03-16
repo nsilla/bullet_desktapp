@@ -33,12 +33,12 @@ def monthly_log(journal):
         monthly_log.append(entry)
     return monthly_log
 
-def overdue(journal, reference=None):
+def overdue(journal, dates_before=None):
     def check_overdue(date):
-        return len(date) and date < (reference if reference else dates.get_today())
+        return len(date) and date < (dates_before if dates_before else dates.get_today())
     overdue = journal.search(
         (entries.date != '') &
-        (entries.date < (reference if reference else dates.get_today())) &
+        (entries.date < (dates_before if dates_before else dates.get_today())) &
         (entries.kind == "task") &
         (entries.state == "pending"))
     return sorted(overdue, key=lambda k: k['position'])
