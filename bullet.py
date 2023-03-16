@@ -4,6 +4,22 @@ import dates
 
 entries = Query()
 
+def daily_log(journal, tasks=True, notes=True, events=True):
+    daily_log = []
+
+    def check_kind(kind, tasks, notes, events):
+        return (kind == 'task' and tasks or
+                kind == 'note' and notes or
+                kind == 'event' and events)
+        
+    for entry in sorted(
+        journal.search(
+            (entries.date == dates.get_today()) & 
+            (entries.kind.test(check_kind, tasks, notes, events))),
+        key=lambda k: k['position']):
+        daily_log.append(entry)
+    return daily_log
+
 def future_log(journal):
     future_log = []
 

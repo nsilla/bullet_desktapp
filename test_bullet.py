@@ -76,6 +76,26 @@ _default:
     position: 7     
     kind: task
     state: pending
+  11:
+    description: today's event
+    date: "{today}"
+    position: 8
+    kind: event
+  12:
+    description: today's note
+    date: "{today}"
+    position: 9
+    kind: note
+  13:
+    description: last week's event
+    date: "{last_week}"
+    position: 10
+    kind: event
+  14:
+    description: last week's note
+    date: "{last_week}"
+    position: 11
+    kind: note
 '''
     print(journal_yaml)
     journal_json = yaml.safe_load(journal_yaml.format(today=dates.get_today(), last_month=last_month, next_month=next_month, last_week=last_week, next_week=next_week, this_monday=this_monday))
@@ -85,19 +105,33 @@ _default:
     journal = TinyDB("/tmp/test.json")
     entries = Query()
 
-    #journal.remove(entries.description.matches(".*"))
-    #journal.insert({'description': "previous month task", 'date': "2023-02-03", 'position': "1"})
-    #journal.insert({'description': "task unscheduled", 'date': "", 'position': "2"})
-    #journal.insert({'description': "next month task", 'date': "2023-04-03", 'position': "3"})
-    #journal.insert({'description': "today's task", 'date': dates.get_today(), 'position': "4"})
-    #journal.insert({'description': "last week task", 'date': last_week, 'position': "5"})
-    #journal.insert({'description': "next week task", 'date': next_monday, 'position': "6"})
-    #journal.insert({'description': "this week task", 'date': this_monday, 'position': "7"})
-
     future_log = bullet.future_log(journal)
 
     assert len(future_log) == 1
     assert future_log[0]['description'] == "task unscheduled"
+
+def test_daily_log():
+    today = dates.get_today()
+
+    journal = TinyDB("/tmp/test.json")
+    entries = Query()
+
+    dl = bullet.daily_log(journal)
+
+    assert len(dl) == 3
+    assert dl[0]["description"] == "today's task"
+
+    dl = bullet.daily_log(journal, notes=False, events=False)
+    assert len(dl) == 1
+    assert dl[0]["description"] == "today's task"
+
+    dl = bullet.daily_log(journal, tasks=False, events=False)
+    assert len(dl) == 1
+    assert dl[0]["description"] == "today's note"
+
+    dl = bullet.daily_log(journal, tasks=False, notes=False)
+    assert len(dl) == 1
+    assert dl[0]["description"] == "today's event"
 
 def test_monthly_log():
 
@@ -122,14 +156,8 @@ def test_overdue():
     assert bullet.overdue(journal, str(datetime.datetime.fromtimestamp(today_epoch-6*24*60*60)))[-1]["description"] == "last week task"
 
 def test_weekly_log():
-
-    tm = dates.this_month()
-    today = dates.get_today()
-
     journal = TinyDB("/tmp/test.json")
-    entries = Query()
-
     weekly_log = bullet.weekly_log(journal)
     
-    assert len(weekly_log) == 2
-    assert weekly_log[-1]['description'] == "this week task"
+    assert len(weekly_log) == 4
+    assert weekly_log[1]['description'] == "this week task"

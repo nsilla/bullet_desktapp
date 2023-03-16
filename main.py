@@ -197,13 +197,19 @@ elif args.w:
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.m:
+    overdue = bullet.overdue(journal, dates.get_begining_of_month())
+    if len(overdue) > 0:
+        print("Overdue:")
+        for entry in overdue:
+            with_key = ' [%s]' % entry['key'] if args.k else ''
+            print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
     print(dates.this_month() + ':')
-    for entry in bullet.monthly_log(journal):
+    for entry in bullet.future_log(journal) + bullet.monthly_log(journal):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.f:
     print('Future log:')
     #for entry in sorted(bullet.future_log(journal), key=lambda k: k['position']):
-    for entry in bullet.future_log(journal) + bullet.monthly_log(journal):
+    for entry in bullet.future_log(journal):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry, future=True), entry['description'], with_key))
