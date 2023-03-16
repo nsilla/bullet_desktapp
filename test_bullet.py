@@ -161,3 +161,20 @@ def test_weekly_log():
     
     assert len(weekly_log) == 4
     assert weekly_log[1]['description'] == "this week task"
+    
+    today_epoch = datetime.datetime.today().timestamp()
+    last_week = datetime.datetime.fromtimestamp(today_epoch-7*24*60*60).isocalendar()[0:2]
+    weekly_log = bullet.weekly_log(journal, week=last_week)
+    assert len(weekly_log) == 3
+
+    weekly_log = bullet.weekly_log(journal, week=last_week, notes=False, events=False)
+    assert len(weekly_log) == 1
+    assert weekly_log[0]["description"] == "last week task"
+
+    weekly_log = bullet.weekly_log(journal, week=last_week, tasks=False, events=False)
+    assert len(weekly_log) == 1
+    assert weekly_log[0]["description"] == "last week's note"
+
+    weekly_log = bullet.weekly_log(journal, week=last_week, notes=False, tasks=False)
+    assert len(weekly_log) == 1
+    assert weekly_log[0]["description"] == "last week's event"

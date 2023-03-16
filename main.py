@@ -193,7 +193,7 @@ elif args.l:
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.w:
     print("Week %d (%d): " % (dates.this_week()[1], dates.this_week()[0]))
-    for entry in bullet.weekly_log(journal):
+    for entry in bullet.weekly_log(journal, notes=False):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.m:

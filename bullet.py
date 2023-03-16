@@ -4,14 +4,14 @@ import dates
 
 entries = Query()
 
+def check_kind(kind, tasks, notes, events):
+    return (kind == 'task' and tasks or
+            kind == 'note' and notes or
+            kind == 'event' and events)
+        
 def daily_log(journal, tasks=True, notes=True, events=True):
     daily_log = []
 
-    def check_kind(kind, tasks, notes, events):
-        return (kind == 'task' and tasks or
-                kind == 'note' and notes or
-                kind == 'event' and events)
-        
     for entry in sorted(
         journal.search(
             (entries.date == dates.get_today()) & 
@@ -43,8 +43,10 @@ def overdue(journal, dates_before=None):
         (entries.state == "pending"))
     return sorted(overdue, key=lambda k: k['position'])
 
-def weekly_log(journal):
+def weekly_log(journal, week=None, tasks=True, notes=True, events=True):
     weekly_log = []
-    for entry in sorted(journal.search(entries.date.test(lambda d: len(d) and dates.week(d) == dates.this_week())), key=lambda k: k['position']):
+    def check_week(date, week):
+        return len(date) and dates.week(date) == (week if week else dates.this_week())
+    for entry in sorted(journal.search(entries.date.test(check_week, week) & entries.kind.test(check_kind, tasks, notes, events)), key=lambda k: k['position']):
         weekly_log.append(entry)
     return weekly_log
