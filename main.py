@@ -149,6 +149,25 @@ journal = TinyDB(args.path[0] if args.path else default_journal_path)
 
 entries = Query()
 
+
+# TODO: remove this block when not needed anymore
+
+def date_split():
+    import datetime
+    from tinydb.operations import delete
+    for entry in journal.all():
+        if entry["date"] == "":
+            journal.update({"date": {"year": "", "month": "", "day": "", "week": ""}}, entries.key == entry["key"])
+        elif entry["date"] and type(entry["date"]) == str and entry["date"] != "":
+            year = entry["date"][0:4]
+            month = entry["date"][5:7]
+            day = entry["date"][8:10]
+            week = "%02d" % datetime.datetime.strptime(entry["date"], "%Y-%m-%d").isocalendar()[1]
+            journal.update({"date": {"year": year, "month": month, "day": day, "week": week}}, entries.key == entry["key"])
+            
+
+date_split()
+
 if args.schedule:
     journal.update({'date': args.schedule[1] if len(args.schedule) > 1 else ''}, entries.key == args.schedule[0])
 elif args.reposition:
@@ -193,7 +212,7 @@ elif args.l:
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.w:
     print("Week %d (%d): " % (dates.this_week()[1], dates.this_week()[0]))
-    for entry in bullet.weekly_log(journal, notes=False):
+    for entry in bullet.weekly_log(journal, notes=False, done=False):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.m:
@@ -204,7 +223,7 @@ elif args.m:
             with_key = ' [%s]' % entry['key'] if args.k else ''
             print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
     print(dates.this_month() + ':')
-    for entry in bullet.future_log(journal) + bullet.monthly_log(journal):
+    for entry in bullet.future_log(journal) + bullet.monthly_log(journal, done=False):
         with_key = ' [%s]' % entry['key'] if args.k else ''
         print(' %s %s%s' % (get_bullet(entry), entry['description'], with_key))
 elif args.f:
